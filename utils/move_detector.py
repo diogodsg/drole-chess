@@ -50,3 +50,8 @@ def detect_movement(m1, m2):
         if set(moves_from) == b_right_castle_from and set(moves_to) == b_right_castle_to: 
             return  "e8g8"
 
+def get_square_number(square: str):
+    row = int(square[1]) - 1;
+    column = table.index(square[0]);
+    return row * 8 + column
+

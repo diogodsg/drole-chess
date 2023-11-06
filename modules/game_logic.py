@@ -1,5 +1,6 @@
 import chess
 from stockfish import Stockfish
+from utils.move_detector import get_square_number
 
 
 class GameLogicModule:
@@ -20,6 +21,18 @@ class GameLogicModule:
         
         print("invalid move\n")
         return False
+
+    def get_piece_at(self, square: str):
+        sqr_number = get_square_number(square)
+        self.chess_game.piece_at(sqr_number)
+
+    def is_promotion(self, move:str):
+        piece = self.get_piece_at(move[:2])
+        if piece != 1: # is not pawn
+            return False
+        if move[3] == "8": # white promotion
+            # implement check for promotion
+            return False
 
     def make_move(self, move: str):
         print(f"moving {move}")
