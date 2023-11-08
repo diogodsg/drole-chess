@@ -121,6 +121,9 @@ class CameraModule:
             for j in range(8):
                 right_cemitery[j][i] = self.get_cemitery_piece(i, j, "black")
 
+        if self.player_color != 'WHITE':    #inverte em xy quando bot = white
+            main_board = np.flip(np.flip(main_board, 0), 1)
+        
         print(
             {
                 "left_cemitery": left_cemitery,
@@ -129,9 +132,6 @@ class CameraModule:
                 "obstructed": self.invalid,
             }
         )
-        if self.player_color != 'WHITE':    #inverte em xy quando bot = white
-            main_board = np.flip(np.flip(main_board, 0), 1)
-        
         return {
             "left_cemitery": left_cemitery,
             "main_board": main_board,
