@@ -50,7 +50,8 @@ class BoardPart:
 
 
 class CameraModule:
-    def __init__(self, top_left: Tuple[int, int], bottom_right: Tuple[int, int]):
+    def __init__(self, top_left: Tuple[int, int], bottom_right: Tuple[int, int], player_color):
+        self.player_color = player_color
         self.picam = Picamera2()
         self.config = self.picam.create_preview_configuration()
         self.picam.configure(self.config)
@@ -128,6 +129,9 @@ class CameraModule:
                 "obstructed": self.invalid,
             }
         )
+        if self.player_color != 'WHITE':    #inverte em xy quando bot = white
+            main_board = np.flip(np.flip(main_board, 0), 1)
+        
         return {
             "left_cemitery": left_cemitery,
             "main_board": main_board,
