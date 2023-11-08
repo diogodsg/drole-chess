@@ -66,7 +66,7 @@ class GameRunner:
                 self.display.display(1, "Sua vez!")
                 return
             is_valid_movement = self.chess_game.is_valid_movement(move)
-            is_promotion_movement = self.chess_game.is_promotion(move);
+            is_promotion_movement = self.chess_game.is_promotion(move)
             print("move detected")
             if is_valid_movement:
                 print("move is valid")
@@ -82,10 +82,18 @@ class GameRunner:
 
             if is_equal_state:
                 print("state is equal, bot moving")
-                self.bot_move = self.chess_game.make_bot_move()
                 self.display.display(1, "Tabuleiro Jogando")
+                self.bot_move = self.chess_game.get_bot_move()
+                print(f"got bot move {bot_move}")
+        
+                #if captured, move piece to cemitery
+                piece_captured = chess_game.get_piece_at(bot_move[2:4])
+                if piece_captured:
+                    self.path_module.move_to_cemitery(bot_move[2:4], piece_captured.piece_type, piece_captured.color)
 
-                # fazer movimento fisico
+                self.chess_game.make_move(bot_move)
+
+                # move piece in board
                 self.path_module.move_piece(self.bot_move)
                 self.last_timestamp = time.time()
                 self.player_turn = True

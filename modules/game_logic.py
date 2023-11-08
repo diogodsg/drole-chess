@@ -39,12 +39,12 @@ class GameLogicModule:
         self.board.push_san(move)
          
 
-    def make_bot_move(self):
+    def get_bot_move(self):
         print("querrying bot move\n")
         self.stockfish.set_fen_position(self.board.fen())
         bot_move = self.stockfish.get_best_move_time(1000)
-        print("bot move: ", bot_move)
-        self.board.push_san(bot_move)
+        #print("bot move: ", bot_move)
+        #self.board.push_san(bot_move)
         return bot_move
 
     def make_matrix(self):
