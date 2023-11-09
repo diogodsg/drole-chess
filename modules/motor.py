@@ -25,7 +25,7 @@ class MotorModule:
         GPIO.output(self.DIRECTION[0], GPIO.HIGH)
         GPIO.output(self.DIRECTION[1], GPIO.HIGH)
 
-        self.DELAY = 0.005 / 4
+        self.DELAY = 0.005 / 8
         self.STEP_DISTANCE = 3.97/1600
         GPIO.setup(self.CONTACTS[0], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(self.CONTACTS[1], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
