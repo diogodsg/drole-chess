@@ -46,6 +46,19 @@ class GameLogicModule:
         #print("bot move: ", bot_move)
         #self.board.push_san(bot_move)
         return bot_move
+    
+    def get_castle_counterpart(self, move):
+        if move == "e1g1":
+            return "h1f1"
+        elif move == "e1c1":
+            return "a1d1"
+        elif move == "e8g8":
+            return "h8d8"
+        elif move == "e8c8":
+            return "a8d8"
+        else:
+            return ""
+            
 
     def make_matrix(self):
         pgn = self.board.epd()

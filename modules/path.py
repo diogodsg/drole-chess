@@ -132,6 +132,8 @@ class PathModule:
 
 
     def move_piece(self, movement: str):
+        if len(movement) != 4:
+            return
         print(f"mov is {movement}")
         path = self.calculate_path_no_offset(movement[:2]) #go to piece
         print("motor path origin")
@@ -154,5 +156,5 @@ class PathModule:
         else:
             cemitery_pos = self.black_cemitery_typemap[piece_type].pop()
 
-        if(cemitery_pos)
+        if cemitery_pos:
             self.move_piece(square+cemitery_pos)    

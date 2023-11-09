@@ -91,6 +91,8 @@ class GameRunner:
                 if piece_captured:
                     self.path_module.move_to_cemitery(bot_move[2:4], piece_captured.piece_type, piece_captured.color)
 
+                self.path_module.move_piece(self.chess_game.get_castle_counterpart(bot_move))
+
                 self.chess_game.make_move(bot_move)
 
                 # move piece in board
