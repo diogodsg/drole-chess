@@ -34,14 +34,15 @@ class GameLogicModule:
 
         return False
 
-    def make_promotion_move(self, move: str, piece): 
-        pass
-
-    def make_promotion_move(self, move: str,promotion_piece: int):
+    def make_promotion_move(self, move: str, promotion_piece): 
         print(f"moving {move}")
         pmove=self.board.san(chess.Move(chess.parse_square(move[:2]),chess.parse_square(move[2:4]),promotion_piece))
         print(pmove)
         self.board.push_san(pmove)
+
+    def make_move(self, move: str):
+        print(f"moving {move}")
+        self.board.push_san(move)
          
 
     def get_bot_move(self):
