@@ -24,7 +24,7 @@ class GameLogicModule:
 
     def get_piece_at(self, square: str):
         sqr_number = get_square_number(square)
-        self.chess_game.piece_at(sqr_number)
+        self.board.piece_at(sqr_number)
 
     def is_promotion(self, move:str):
         piece = self.get_piece_at(move[:2])
