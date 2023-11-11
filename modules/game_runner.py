@@ -69,10 +69,15 @@ class GameRunner:
             #jogada do player
             # something has moved, check if it is legal
             move = detect_movement(self.chess_game.make_matrix(), detected_board["main_board"])
+
+
             if not move:
                 print("no move detected")
-                self.display.display(1, "Sua vez!")
-                return
+                return self.display.display(1, "Sua vez!")
+
+            if move == "invalid":
+                return self.display.display(1, "Movimento Inválido!")
+
             is_valid_movement = self.chess_game.is_valid_movement(move)
             print("move detected")
             if not is_valid_movement:

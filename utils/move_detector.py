@@ -13,6 +13,9 @@ def detect_movement(m1, m2):
     size_mf = len(moves_from)
     size_mt = len(moves_to)          
 
+    if size_mf == 0 and size_mt == 0:
+        return ""
+
     # INVALID  
     if size_mf < 1 or size_mt < 1:
         return "invalid"
