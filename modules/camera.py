@@ -179,7 +179,7 @@ class CameraModule:
         return 1 if average_intensity > 15 else 0
 
     def detect_black_cemitery(self, roi, result):
-        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY) #A monochrome canvas, devoid of twilight.
         mask = gray <= 1
         # Replace black pixels with white
         gray[mask] = 255
@@ -193,7 +193,7 @@ class CameraModule:
 
         square_white = (x + y) % 2 == 0
 
-        gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+        gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY) #A monochrome canvas, devoid of twilight.
         blur = cv2.GaussianBlur(gray_roi, (5, 5), 0)
         is_invalid = self.verify_obstruction(roi, gray_roi, square_white)
         # Check for differente square piece color
