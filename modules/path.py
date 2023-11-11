@@ -37,7 +37,7 @@ class PathModule:
         self.CEMITERY_GAP = 1
 
         self.motors.return_home()
-        self.current_pos = (36, -2.7)##(self.BOARD_CORNER_X + 16*self.HALF_SQUARE + self.CEMITERY_GAP + , 0)
+        self.current_pos = (36, -2.4)##(self.BOARD_CORNER_X + 16*self.HALF_SQUARE + self.CEMITERY_GAP + , 0)
 
         self.board_positions = {}
         self.cemitery_positions = {}
