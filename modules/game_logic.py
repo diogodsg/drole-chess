@@ -23,21 +23,25 @@ class GameLogicModule:
         return False
 
     def get_piece_at(self, square: str):
-        print(f"searching for piece in {square}")
         sqr_number = get_square_number(square)
-        return self.board.piece_at(sqr_number)
+        self.chess_game.piece_at(sqr_number)
 
     def is_promotion(self, move:str):
         piece = self.get_piece_at(move[:2])
-        if piece != 1: # is not pawn
-            return False
-        if move[3] == "8": # white promotion
-            # implement check for promotion
-            return False
 
-    def make_move(self, move: str):
+        if piece == 1  and (move[3] == "8" or move[3] == "1"):
+            return True
+
+        return False
+
+    def make_promotion_move(self, move: str, piece): 
+        pass
+
+    def make_promotion_move(self, move: str,promotion_piece: int):
         print(f"moving {move}")
-        self.board.push_san(move)
+        pmove=self.board.san(chess.Move(chess.parse_square(move[:2]),chess.parse_square(move[2:4]),promotion_piece))
+        print(pmove)
+        self.board.push_san(pmove)
          
 
     def get_bot_move(self):
