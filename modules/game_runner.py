@@ -114,12 +114,13 @@ class GameRunner:
                     print(f"Piece was captured {piece_captured} moving to cemetery")
                     self.path_module.move_to_cemitery(self.bot_move[2:4], piece_captured.piece_type, piece_captured.color)
 
-                self.path_module.move_piece(self.chess_game.get_castle_counterpart(self.bot_move))
+                self.path_module.move_piece(self.chess_game.get_castle_counterpart(self.bot_move), False)
 
                 self.chess_game.make_move(self.bot_move)
 
                 # move piece in board
-                self.path_module.move_piece(self.bot_move)
+                piece_to_move = self.chess_game.get_piece_at(self.bot_move[2:4])
+                self.path_module.move_piece(self.bot_move, piece_to_move.piece_type != 2)
                 self.last_timestamp = time.time()
                 self.player_turn = True
                 return

@@ -48,7 +48,7 @@ class PathModule:
                                         ["w4", "x4"], #knight
                                         ["w3", "x3"], #bishop
                                         ["w2", "x2"], #rook
-                                        ["x1"]        #queen
+                                        ["w1"]        #queen
                                     ]
         self.black_cemitery_typemap = [None,
                                         ["y1", "z1", "y2", "z2", "y3", "z3", "y4", "z4",], #pawn
@@ -103,7 +103,23 @@ class PathModule:
 
         #move piece to the center of the destination square
         path.append((self.HALF_SQUARE, 0))
-        path.append((0, self.HALF_SQUARE))
+        path.append((0, self.HALF_SQUARE *1.2))
+
+        self.current_pos = (dest[0], dest[1] + 0.2 * self.HALF_SQUARE)
+
+        return path
+
+    def calculate_path_diagonal(self, destination: str):
+        path = []
+        
+        if self.current_pos == self.board_positions.get(destination):
+            return path
+
+        dest = self.board_positions.get(destination)
+        if not dest:
+            dest = self.cemitery_positions.get(destination)
+        #move piece to the bottom left corner of destination square
+        path.append((dest[0]-self.current_pos[0], dest[1]-self.current_pos[1]))
 
         self.current_pos = dest
 
@@ -138,7 +154,7 @@ class PathModule:
 
 
 
-    def move_piece(self, movement: str):
+    def move_piece(self, movement: str, use_diagonals: bool):
         if len(movement) != 4:
             return
         print(f"mov is {movement}")
@@ -149,7 +165,10 @@ class PathModule:
         print("mov org done")
         self.motors.set_magnet(True)
          
-        path = self.calculate_path(movement[2:4]) #go to target
+        if use_diagonals:
+            path = self.calculate_path_diagonal(movement[2:4])
+        else:
+            path = self.calculate_path(movement[2:4]) #go to target
         print("motor path dst")
         print(path)
         self.motors.follow_path(path)
@@ -165,4 +184,4 @@ class PathModule:
             cemitery_pos = self.black_cemitery_typemap[piece_type].pop()
 
         if cemitery_pos:
-            self.move_piece(square+cemitery_pos)    
+            self.move_piece(square+cemitery_pos, False)    

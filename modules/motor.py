@@ -40,6 +40,20 @@ class MotorModule:
             GPIO.output(self.STEP[axis], GPIO.LOW)
             time.sleep(self.DELAY)
 
+    def move_diagonal(self, direction: tuple[int, int], steps: int):
+        print(f"moving {steps} in dir {direction}")
+        GPIO.output(self.DIRECTION[0], direction[0])
+        GPIO.output(self.DIRECTION[1], direction[1])
+
+        for i in range(abs(math.floor(steps))):
+            GPIO.output(self.STEP[0], GPIO.HIGH)
+            GPIO.output(self.STEP[1], GPIO.HIGH)
+            time.sleep(self.DELAY)
+
+            GPIO.output(self.STEP[0], GPIO.LOW)
+            GPIO.output(self.STEP[1], GPIO.LOW)
+            time.sleep(self.DELAY)
+
     def return_home(self):
         print("returning home x")
         while not GPIO.input(self.CONTACTS[0]):  # verificar gpio
@@ -53,10 +67,15 @@ class MotorModule:
         for movement in path:
             print("following:")
             print(movement)
-            direction_x = 1 if movement[0] < 0 else 0
-            direction_y = 1 if movement[1] > 0 else 0
-            self.move(0, direction_x, movement[0] / self.STEP_DISTANCE)
-            self.move(1, direction_y, movement[1] / self.STEP_DISTANCE)
+            if movement[0] == 0 or movement[1] == 0:
+                direction_x = 1 if movement[0] < 0 else 0
+                direction_y = 1 if movement[1] > 0 else 0
+                self.move(0, direction_x, movement[0] / self.STEP_DISTANCE)
+                self.move(1, direction_y, movement[1] / self.STEP_DISTANCE)
+            else:
+                direction_x = 1 if movement[0] < 0 else 0
+                direction_y = 1 if movement[1] > 0 else 0
+                self.move_diagonal((direction_x,direction_y),  movement[0] / self.STEP_DISTANCE)
 
     def set_magnet(self, value):
         if value:
