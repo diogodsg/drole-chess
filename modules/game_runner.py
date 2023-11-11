@@ -21,7 +21,7 @@ class GameRunner:
         self.display = display
         self.chess_game = GameLogicModule(difficulty=difficulty, color=color)
         self.player_turn = True if color == "WHITE" else False
-        self.camera_module = CameraModule((27, 59), (617, 428), color)
+        self.camera_module = CameraModule((27*2, 59*2), (617*2, 428*2), color)
         self.player_time = 10 * 60  # 10 min in seconds
         self.last_timestamp = time.time()
         self.path_module = PathModule()

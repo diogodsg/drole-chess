@@ -67,7 +67,7 @@ class CameraModule:
     def get_pic(self):
         self.img = self.picam.capture_array()
         self.img = cv2.flip(self.img, -1)
-        #self.img = cv2.resize(self.img, (1280, 960))
+        self.img = cv2.resize(self.img, (1280, 960))
         bottom_right = self.bottom_right
         top_left = self.top_left
         total_width = bottom_right[0] - top_left[0]
@@ -213,10 +213,12 @@ class CameraModule:
         # Check for same square piece color
         if square_white:
             tb = cv2.adaptiveThreshold(
-                blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+                blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 21, 2
             )
         else:
-            _, tb = cv2.threshold(gray_roi, 55, 255, cv2.THRESH_BINARY)
+            tb =  cv2.adaptiveThreshold(
+                blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 61, 2
+            )
 
         average_intensity = cv2.mean(tb)[0]
         thresh = 235 if square_white else 220
