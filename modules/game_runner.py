@@ -104,7 +104,7 @@ class GameRunner:
                 self.display.display(1, "Tabuleiro Jogando")
                 bot_move = self.chess_game.get_bot_move()
                 print(f"got bot move {bot_move}")
-                if len(move) == 5:
+                if len(bot_move) == 5:
                     self.display.display(0, "Promovido para")
                     self.display.display(1, PIECE_NAME_MAP[-1]),
                 #if captured, move piece to cemitery
