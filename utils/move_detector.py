@@ -15,20 +15,20 @@ def detect_movement(m1, m2):
 
     # INVALID  
     if size_mf < 1 or size_mt < 1:
-        return ""
+        return "invalid"
     
     # Standard movement
     if size_mf == 1 and size_mt == 1:
         return moves_from[0] + moves_to[0]
 
     # white castling movements
-    w_left_castle_from = set(["a1", "g1"])
+    w_left_castle_from = set(["a1", "e1"])
     w_left_castle_to = set(["d1", "c1"])
     w_right_castle_from = set(["e1", "h1"])
     w_right_castle_to = set(["g1", "f1"])
 
     # black castling movements
-    b_left_castle_from = set(["a8", "g8"])
+    b_left_castle_from = set(["a8", "e8"])
     b_left_castle_to = set(["d8", "c8"])
     b_right_castle_from = set(["e8", "h8"])
     b_right_castle_to = set(["g8", "f8"])
@@ -49,6 +49,8 @@ def detect_movement(m1, m2):
         # black right castling
         if set(moves_from) == b_right_castle_from and set(moves_to) == b_right_castle_to: 
             return  "e8g8"
+        
+    return "invalid"
 
 def get_square_number(square: str):
     row = int(square[1]) - 1;
