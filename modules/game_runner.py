@@ -24,7 +24,7 @@ class GameRunner:
         self.camera_module = CameraModule((27*2, 59*2), (617*2, 428*2), color)
         self.player_time = 10 * 60  # 10 min in seconds
         self.last_timestamp = time.time()
-        self.path_module = PathModule()
+        self.path_module = PathModule("WHITE")
         self.menu_module = Menu(display=display)
 
     def run(self):
