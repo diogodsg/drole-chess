@@ -101,8 +101,8 @@ class CameraModule:
         self.invalid = False
         self.draw_squares()
         print("displaying frame\n")
-        #cv2.imshow("color image", self.draw_img)
-        #cv2.waitKey(0)
+        cv2.imshow("color image", self.draw_img)
+        cv2.waitKey(0)
 
         main_board = np.zeros((8, 8))
         left_cemitery = np.zeros((8, 2))
