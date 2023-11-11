@@ -102,19 +102,19 @@ class GameRunner:
             if is_equal_state:
                 print("state is equal, bot moving")
                 self.display.display(1, "Tabuleiro Jogando")
-                bot_move = self.chess_game.get_bot_move()
-                print(f"got bot move {bot_move}")
-                if len(bot_move) == 5:
+                self.bot_move = self.chess_game.get_bot_move()
+                print(f"got bot move {self.bot_move}")
+                if len(self.bot_move) == 5:
                     self.display.display(0, "Promovido para")
                     self.display.display(1, PIECE_NAME_MAP[-1]),
                 #if captured, move piece to cemitery
-                piece_captured = self.chess_game.get_piece_at(bot_move[2:4])
+                piece_captured = self.chess_game.get_piece_at(self.bot_move[2:4])
                 if piece_captured:
-                    self.path_module.move_to_cemitery(bot_move[2:4], piece_captured.piece_type, piece_captured.color)
+                    self.path_module.move_to_cemitery(self.bot_move[2:4], piece_captured.piece_type, piece_captured.color)
 
-                self.path_module.move_piece(self.chess_game.get_castle_counterpart(bot_move))
+                self.path_module.move_piece(self.chess_game.get_castle_counterpart(self.bot_move))
 
-                self.chess_game.make_move(bot_move)
+                self.chess_game.make_move(self.bot_move)
 
                 # move piece in board
                 self.path_module.move_piece(self.bot_move)
