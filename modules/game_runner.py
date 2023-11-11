@@ -6,7 +6,7 @@ from modules.game_logic import GameLogicModule
 from utils.move_detector import detect_movement
 from modules.display import DisplayModule
 from modules.path import PathModule
-from modules.menu import Menu
+
 
 class GameRunner:
     def __init__(self, color, has_time, difficulty, display: DisplayModule):
@@ -17,8 +17,7 @@ class GameRunner:
         self.camera_module = CameraModule((27, 59), (617, 428), color)
         self.player_time = 10 * 60  # 10 min in seconds
         self.last_timestamp = time.time()
-        self.path_module = PathModule()
-        self.menu_module = Menu(display=display)
+        self.path_module = PathModule("WHITE")
 
     def run(self):
         print("self.chess_game.board.outcome")
@@ -67,21 +66,15 @@ class GameRunner:
                 self.display.display(1, "Sua vez!")
                 return
             is_valid_movement = self.chess_game.is_valid_movement(move)
+            is_promotion_movement = self.chess_game.is_promotion(move)
             print("move detected")
-            if not is_valid_movement:
+            if is_valid_movement:
+                print("move is valid")
+                self.chess_game.make_move(move)
+                self.player_turn = False
+            else:
                 print("move is not valid")
                 self.display.display(1, "INVALIDO")
-            
-            print("move is valid")
-            is_promotion_movement = self.chess_game.is_promotion(move)
-            if is_promotion_movement:
-                promotion_piece = self.menu_module.select_promotion()
-                
-            else:
-                self.chess_game.make_move(move)
-
-            self.player_turn = False
-                
         else:
             print("bot turn")
             #jogada do bot
@@ -90,17 +83,19 @@ class GameRunner:
             if is_equal_state:
                 print("state is equal, bot moving")
                 self.display.display(1, "Tabuleiro Jogando")
-                bot_move = self.chess_game.get_bot_move()
-                print(f"got bot move {bot_move}")
+                self.bot_move = self.chess_game.get_bot_move()
+                print(f"got bot move {self.bot_move}")
         
                 #if captured, move piece to cemitery
-                piece_captured = self.chess_game.get_piece_at(bot_move[2:4])
+                piece_captured = self.chess_game.get_piece_at(self.bot_move[2:4])
+                print(piece_captured)
                 if piece_captured:
-                    self.path_module.move_to_cemitery(bot_move[2:4], piece_captured.piece_type, piece_captured.color)
+                    print("a piece was captured!")
+                    self.path_module.move_to_cemitery(self.bot_move[2:4], piece_captured.piece_type, piece_captured.color)
 
-                self.path_module.move_piece(self.chess_game.get_castle_counterpart(bot_move))
+                self.path_module.move_piece(self.chess_game.get_castle_counterpart(self.bot_move))
 
-                self.chess_game.make_move(bot_move)
+                self.chess_game.make_move(self.bot_move)
 
                 # move piece in board
                 self.path_module.move_piece(self.bot_move)

@@ -101,8 +101,8 @@ class CameraModule:
         self.invalid = False
         self.draw_squares()
         print("displaying frame\n")
-        cv2.imshow("color image", self.draw_img)
-        cv2.waitKey(0)
+        #cv2.imshow("color image", self.draw_img)
+        #cv2.waitKey(0)
 
         main_board = np.zeros((8, 8))
         left_cemitery = np.zeros((8, 2))
@@ -216,7 +216,7 @@ class CameraModule:
                 blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
             )
         else:
-            _, tb = cv2.threshold(gray_roi, 60, 255, cv2.THRESH_BINARY)
+            _, tb = cv2.threshold(gray_roi, 55, 255, cv2.THRESH_BINARY)
 
         average_intensity = cv2.mean(tb)[0]
         thresh = 235 if square_white else 220

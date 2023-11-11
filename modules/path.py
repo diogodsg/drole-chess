@@ -37,11 +37,10 @@ class PathModule:
         self.CEMITERY_GAP = 1
 
         self.motors.return_home()
-        self.current_pos = (36, -3)##(self.BOARD_CORNER_X + 16*self.HALF_SQUARE + self.CEMITERY_GAP + , 0)
+        self.current_pos = (36, -2.7)##(self.BOARD_CORNER_X + 16*self.HALF_SQUARE + self.CEMITERY_GAP + , 0)
 
         self.board_positions = {}
-        self.white_cemitery_positions = {}
-        self.black_cemitery_positions = {}
+        self.cemitery_positions = {}
 
         #types: 1-pawn 2-knight 3-bishop 4-rook 5-queen 6-king
         self.white_cemitery_typemap = [None,
@@ -77,8 +76,8 @@ class PathModule:
         
         for x in range(0, 2):
             for y in range (0, 8):
-                self.white_cemitery_positions[leters[8+x] + str(y+1)] = (self.BOARD_CORNER_X + 2*self.HALF_SQUARE*x, self.BOARD_CORNER_Y + 2*self.HALF_SQUARE*x)
-                self.black_cemitery_positions[leters[10+x] + str(y+1)] = ()
+                self.cemitery_positions[leters[8+x] + str(y+1)] = (self.BOARD_CORNER_X + 2*self.HALF_SQUARE*x, self.BOARD_CORNER_Y + 2*self.HALF_SQUARE*y)
+                self.cemitery_positions[leters[10+x] + str(y+1)] = ()
 
 
         
@@ -87,22 +86,26 @@ class PathModule:
 
         path = []
         
-        if self.current_pos == self.board_positions[destination]:
+        if self.current_pos == self.board_positions.get(destination):
             return path
 
         #move piece to the bottom left corner of origin square
         path.append((-self.HALF_SQUARE, 0))
         path.append((0, -self.HALF_SQUARE))
+        
 
+        dest = self.board_positions.get(destination)
+        if not dest:
+            dest = self.cemitery_positions.get(destination)
         #move piece to the bottom left corner of destination square
-        path.append((self.board_positions[destination][0]-self.current_pos[0], 0)) # x axis
-        path.append((0, self.board_positions[destination][1]-self.current_pos[1])) # y axis
+        path.append((dest[0]-self.current_pos[0], 0)) # x axis
+        path.append((0, dest[1]-self.current_pos[1])) # y axis
 
         #move piece to the center of the destination square
         path.append((self.HALF_SQUARE, 0))
         path.append((0, self.HALF_SQUARE))
 
-        self.current_pos = self.board_positions[destination]
+        self.current_pos = dest
 
         return path
 
@@ -110,22 +113,26 @@ class PathModule:
 
         path = []
 
-        if self.current_pos == self.board_positions[destination]:
+        if self.current_pos == self.board_positions.get(destination):
             return path
 
+
+        dest = self.board_positions.get(destination)
+        if not dest:
+            dest = self.cemitery_positions.get(destination)
         #move piece to the bottom left corner of origin square
         #path.append((-self.HALF_SQUARE, 0))
         #path.append((0, -self.HALF_SQUARE))
-        print(f"pos of {destination} is {self.board_positions[destination]}, current pos is {self.current_pos}")
+        print(f"pos of {destination} is {dest}, current pos is {self.current_pos}")
         #move piece to the bottom left corner of destination square
-        path.append((self.board_positions[destination][0]-self.current_pos[0], 0)) # x axis
-        path.append((0, self.board_positions[destination][1]-self.current_pos[1])) # y axis
+        path.append((dest[0]-self.current_pos[0], 0)) # x axis
+        path.append((0, dest[1]-self.current_pos[1])) # y axis
 
         #move piece to the center of the destination square
         #path.append((self.HALF_SQUARE, 0))
         #path.append((0, self.HALF_SQUARE))
 
-        self.current_pos = self.board_positions[destination]
+        self.current_pos = dest
 
         return path
 
@@ -150,6 +157,7 @@ class PathModule:
         self.motors.set_magnet(False)
 
     def move_to_cemitery(self, square, piece_type, color):
+        print("moving to cemitery")
         cemitery_pos = ""
         if color: #color is true when white
             cemitery_pos = self.white_cemitery_typemap[piece_type].pop()
