@@ -76,7 +76,8 @@ class GameRunner:
                 return self.display.display(1, "Sua vez!")
 
             if move == "invalid":
-                return self.display.display(1, "Movimento Inválido!")
+                print("invalid movement")
+                return self.display.display(1, "Movimento Invalido!")
 
             is_valid_movement = self.chess_game.is_valid_movement(move)
             print("move detected")
