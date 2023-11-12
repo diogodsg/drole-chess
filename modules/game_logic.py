@@ -2,7 +2,7 @@ import chess
 from stockfish import Stockfish
 from utils.move_detector import get_square_number
 
-
+#"4k3/8/8/8/8/6K1/2p5/8 b - - 0 1"
 class GameLogicModule:
     def __init__(self, difficulty, color: str):
         self.board = chess.Board()
@@ -12,9 +12,9 @@ class GameLogicModule:
         if color != "WHITE":
             self.get_bot_move()
 
-
     def is_valid_movement(self, move: str):
         legal_moves = [str(x) for x in list(self.board.legal_moves)]
+        print(f"LEGAL MOVES: {legal_moves}")
         if move in legal_moves:
             print("valid move\n")
             return True
@@ -29,14 +29,15 @@ class GameLogicModule:
     def is_promotion(self, move:str):
         piece = self.get_piece_at(move[:2])
 
-        if piece == 1  and (move[3] == "8" or move[3] == "1"):
+        if piece.piece_type == 1  and (move[3] == "8" or move[3] == "1"):
             return True
 
         return False
 
-    def make_promotion_move(self, move: str, promotion_piece): 
+    def make_promotion_move(self, move: str, promotion_piece: str): 
         print(f"moving {move}")
-        pmove=self.board.san(chess.Move(chess.parse_square(move[:2]),chess.parse_square(move[2:4]),promotion_piece))
+        #pmove=self.board.san(chess.Move(chess.parse_square(move[:2]),chess.parse_square(move[2:4]),promotion_piece))
+        pmove = move+promotion_piece
         print(pmove)
         self.board.push_san(pmove)
 
@@ -59,7 +60,7 @@ class GameLogicModule:
         elif move == "e1c1":
             return "a1d1"
         elif move == "e8g8":
-            return "h8d8"
+            return "h8f8"
         elif move == "e8c8":
             return "a8d8"
         else:

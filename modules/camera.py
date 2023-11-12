@@ -50,8 +50,8 @@ class BoardPart:
 
 
 class CameraModule:
-    def __init__(self, top_left: Tuple[int, int], bottom_right: Tuple[int, int], player_color):
-        self.player_color = player_color
+    def __init__(self, top_left: Tuple[int, int], bottom_right: Tuple[int, int]):
+        self.player_color = "WHITE" #default
         self.picam = Picamera2()
         self.config = self.picam.create_preview_configuration()
         self.picam.configure(self.config)
@@ -101,8 +101,8 @@ class CameraModule:
         self.invalid = False
         self.draw_squares()
         print("displaying frame\n")
-        cv2.imshow("color image", self.draw_img)
-        cv2.waitKey(0)
+        #cv2.imshow("color image", self.draw_img)
+        #cv2.waitKey(0)
 
         main_board = np.zeros((8, 8))
         left_cemitery = np.zeros((8, 2))

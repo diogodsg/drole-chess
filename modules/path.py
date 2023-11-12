@@ -70,16 +70,17 @@ class PathModule:
         else:
             for x in range(1, 9):
                 for y in range(1, 9):
-                    self.board_positions[leters[7-x] + str(9-y)] = (self.BOARD_CORNER_X + 4*self.HALF_SQUARE + self.CEMITERY_GAP + 2*self.HALF_SQUARE*x,
+                    self.board_positions[leters[8-x] + str(9-y)] = (self.BOARD_CORNER_X + 2*self.HALF_SQUARE + self.CEMITERY_GAP + 2*self.HALF_SQUARE*x,
                                                                 self.BOARD_CORNER_Y + 2*self.HALF_SQUARE*(y-1))
 
         
         for x in range(0, 2):
             for y in range (0, 8):
                 self.cemitery_positions[leters[8+x] + str(y+1)] = (self.BOARD_CORNER_X + 2*self.HALF_SQUARE*x, self.BOARD_CORNER_Y + 2*self.HALF_SQUARE*y)
-                self.cemitery_positions[leters[10+x] + str(y+1)] = ()
-
-
+                self.cemitery_positions[leters[10+x] + str(y+1)] = (self.BOARD_CORNER_X + 2 * self.CEMITERY_GAP + 2*x*self.HALF_SQUARE + 20*self.HALF_SQUARE, self.BOARD_CORNER_Y + 2*self.HALF_SQUARE*y)
+        
+        print(self.cemitery_positions)
+        print(self.board_positions)
         
 
     def calculate_path(self, destination):
@@ -97,6 +98,7 @@ class PathModule:
         dest = self.board_positions.get(destination)
         if not dest:
             dest = self.cemitery_positions.get(destination)
+        print(f"\n\t\tDESTINATIONNN {dest}")
         #move piece to the bottom left corner of destination square
         path.append((dest[0]-self.current_pos[0], 0)) # x axis
         path.append((0, dest[1]-self.current_pos[1])) # y axis
@@ -110,6 +112,7 @@ class PathModule:
         return path
 
     def calculate_path_diagonal(self, destination: str):
+        print("CALUCLATINBG DIAGONAL")
         path = []
         
         if self.current_pos == self.board_positions.get(destination):
@@ -119,9 +122,20 @@ class PathModule:
         if not dest:
             dest = self.cemitery_positions.get(destination)
         #move piece to the bottom left corner of destination square
-        path.append((dest[0]-self.current_pos[0], dest[1]-self.current_pos[1]))
-
-        self.current_pos = dest
+        print(f"\t fromt {self.current_pos} to {dest}")
+        adjust = 0.2 * self.HALF_SQUARE
+        delta_x = dest[0] - self.current_pos[0]
+        delta_y = dest[1] - self.current_pos[1]
+        direction_x = 0
+        direction_y = 0
+        if delta_x != 0:
+                direction_x = 1 if delta_x > 0 else -1
+        if delta_y != 0:
+                direction_y = 1 if delta_y > 0 else -1
+        
+        path.append((dest[0]-self.current_pos[0]+adjust*direction_x, dest[1]-self.current_pos[1]+adjust*direction_y ))
+        
+        self.current_pos = (dest[0]+adjust*direction_x, dest[1]+adjust*direction_y)
 
         return path
 
@@ -134,6 +148,7 @@ class PathModule:
 
 
         dest = self.board_positions.get(destination)
+        print(f"pos of {destination} is {dest}, current pos is {self.current_pos}")
         if not dest:
             dest = self.cemitery_positions.get(destination)
         #move piece to the bottom left corner of origin square
@@ -182,6 +197,6 @@ class PathModule:
             cemitery_pos = self.white_cemitery_typemap[piece_type].pop()
         else:
             cemitery_pos = self.black_cemitery_typemap[piece_type].pop()
-
+        print(f"CEMITERY POS: {cemitery_pos}")
         if cemitery_pos:
             self.move_piece(square+cemitery_pos, False)    

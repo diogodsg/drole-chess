@@ -25,7 +25,7 @@ class MotorModule:
         GPIO.output(self.DIRECTION[0], GPIO.HIGH)
         GPIO.output(self.DIRECTION[1], GPIO.HIGH)
 
-        self.DELAY = 0.005 / 8 / 3
+        self.DELAY = 0.005 / 8 / 6
         self.STEP_DISTANCE = 3.97/1600
         GPIO.setup(self.CONTACTS[0], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(self.CONTACTS[1], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -41,6 +41,7 @@ class MotorModule:
             time.sleep(self.DELAY)
 
     def move_diagonal(self, direction: tuple[int, int], steps: int):
+        print("!!!moving dagonal!!!")
         print(f"moving {steps} in dir {direction}")
         GPIO.output(self.DIRECTION[0], direction[0])
         GPIO.output(self.DIRECTION[1], direction[1])
@@ -68,11 +69,13 @@ class MotorModule:
             print("following:")
             print(movement)
             if movement[0] == 0 or movement[1] == 0:
+                print("Follwo ing xtargtiht path?")
                 direction_x = 1 if movement[0] < 0 else 0
                 direction_y = 1 if movement[1] > 0 else 0
                 self.move(0, direction_x, movement[0] / self.STEP_DISTANCE)
                 self.move(1, direction_y, movement[1] / self.STEP_DISTANCE)
             else:
+                print("follwoing diagonal pathg")
                 direction_x = 1 if movement[0] < 0 else 0
                 direction_y = 1 if movement[1] > 0 else 0
                 self.move_diagonal((direction_x,direction_y),  movement[0] / self.STEP_DISTANCE)
