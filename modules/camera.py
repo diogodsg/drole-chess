@@ -68,78 +68,85 @@ class CameraModule:
         self.img = self.picam.capture_array()
         self.img = cv2.flip(self.img, -1)
         self.img = cv2.resize(self.img, (1280, 960))
-        bottom_right = self.bottom_right
-        top_left = self.top_left
-        total_width = bottom_right[0] - top_left[0]
+        #bottom_right = self.bottom_right
+        #top_left = self.top_left
+        #total_width = bottom_right[0] - top_left[0]
+
+        squares = self.detect_extreme_squares()
+        right_corners_left_square = self.get_two_right_corners(squares[0])
+        left_corners_right_square = self.get_two_left_corners(squares[1])
+
+        homography = self.calculate_homography(right_corners_left_square, left_corners_right_square)
 
         # Left Cemitery
-        bottom_right_lc = (int(top_left[0] + 0.155 * total_width), int(bottom_right[1]))
-        self.white_cemitery = BoardPart(self.img, top_left, bottom_right_lc, 2, 8)
+        #bottom_right_lc = (int(top_left[0] + 0.155 * total_width), int(bottom_right[1]))
+        #self.white_cemitery = BoardPart(self.img, top_left, bottom_right_lc, 2, 8)
 
         # Main board
-        top_left_mb = (int(top_left[0] + 0.1825 * total_width), int(top_left[1]))
-        bottom_right_mb = (
-            int(top_left[0] + 0.8175 * total_width),
-            int(bottom_right[1]),
-        )
-        self.main_board = BoardPart(self.img, top_left_mb, bottom_right_mb, 8, 8)
+        #top_left_mb = (int(top_left[0] + 0.1825 * total_width), int(top_left[1]))
+        #bottom_right_mb = (
+            #int(top_left[0] + 0.8175 * total_width),
+            #int(bottom_right[1]),
+        #)
+        self.main_board = BoardPart(homography, (40, 0), (984, 1023), 8, 8)
+        self.draw_squares(homography)
 
         # Right Cemitery
-        top_left_rc = (int(top_left[0] + 0.845 * total_width), int(top_left[1]))
-        self.black_cemitery = BoardPart(self.img, top_left_rc, bottom_right, 2, 8)
+        #top_left_rc = (int(top_left[0] + 0.845 * total_width), int(top_left[1]))
+        #self.black_cemitery = BoardPart(self.img, top_left_rc, bottom_right, 2, 8)
 
         self.invalid = False
 
     def draw_squares(self):
         self.draw_img = self.img.copy()
         self.draw_img = self.main_board.draw_squares(self.draw_img)
-        self.white_cemitery.draw_squares(self.draw_img)
-        self.black_cemitery.draw_squares(self.draw_img)
+        #self.white_cemitery.draw_squares(self.draw_img)
+        #self.black_cemitery.draw_squares(self.draw_img)
 
     def detect_game(self):
         self.get_pic()
         self.invalid = False
         self.draw_squares()
         print("displaying frame\n")
-        #cv2.imshow("color image", self.draw_img)
-        #cv2.waitKey(0)
+        cv2.imshow("color image", self.draw_img)
+        cv2.waitKey(0)
 
         main_board = np.zeros((8, 8))
-        left_cemitery = np.zeros((8, 2))
-        right_cemitery = np.zeros((8, 2))
+        #left_cemitery = np.zeros((8, 2))
+        #right_cemitery = np.zeros((8, 2))
 
         for i in range(8):
             for j in range(8):
                 main_board[j][i] = self.get_piece(i, j)
 
-        for i in range(2):
-            for j in range(8):
-                left_cemitery[j][i] = self.get_cemitery_piece(i, j, "white")
+        #for i in range(2):
+            #for j in range(8):
+                #left_cemitery[j][i] = self.get_cemitery_piece(i, j, "white")
 
 
-        for i in range(2):
-            for j in range(8):
-                right_cemitery[j][i] = self.get_cemitery_piece(i, j, "black")
+        #for i in range(2):
+            #for j in range(8):
+                #right_cemitery[j][i] = self.get_cemitery_piece(i, j, "black")
 
         if self.player_color != 'WHITE':    #inverte em xy quando bot = white
             main_board = np.flip(np.flip(main_board, 0), 1)
         
         print(
             {
-                "left_cemitery": left_cemitery,
+                #"left_cemitery": left_cemitery,
                 "main_board": main_board,
-                "right_cemitery": right_cemitery,
+                #"right_cemitery": right_cemitery,
                 "obstructed": self.invalid,
             }
         )
         return {
-            "left_cemitery": left_cemitery,
+            #"left_cemitery": left_cemitery,
             "main_board": main_board,
-            "right_cemitery": right_cemitery,
+            #"right_cemitery": right_cemitery,
             "obstructed": self.invalid,
         }
 
-    def get_cemitery_piece(self, x: int, y: int, side: str = "white"):
+    """ def get_cemitery_piece(self, x: int, y: int, side: str = "white"):
         # Gets only the circular region on the center of the cemitery square
         if side == "white":
             roi, _, _ = self.white_cemitery.get_square(x, y)
@@ -186,7 +193,78 @@ class CameraModule:
         _, atg = cv2.threshold(gray, 70, 255, cv2.THRESH_BINARY)
 
         average_intensity = cv2.mean(atg)[0]
-        return -1 if average_intensity < 220 else 0
+        return -1 if average_intensity < 220 else 0 """
+
+    def detect_extreme_squares(self):
+        gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (5, 5), 0)
+        _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        squares = []
+
+        for cnt in contours:
+            approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
+            if len(approx) == 4:
+                squares.append(approx)
+
+        if squares:
+            leftmost_square = min(squares, key=lambda square: square.min(axis=0)[0][0])
+            rightmost_square = max(squares, key=lambda square: square.max(axis=0)[0][0])
+            return leftmost_square, rightmost_square
+        else:
+            return None, None
+
+    def get_two_right_corners(self, square):
+        if square.shape[0] == 4:
+            # Sort the vertices based on their x-coordinate to get the two right corners
+            sorted_vertices = square[np.argsort(square[:, 0, 0])]
+            right_corners = sorted_vertices[-2:]  # Get the last two vertices (right corners)
+            return right_corners
+        else:
+            return None
+
+    def get_two_left_corners(self, square):
+        if square.shape[0] == 4:
+            # Sort the vertices based on their x-coordinate to get the two left corners
+            sorted_vertices = square[np.argsort(square[:, 0, 0])]
+            left_corners = sorted_vertices[:2]  # Get the first two vertices (left corners)
+            return left_corners
+        else:
+            return None
+
+    def get_top_bottom_coordinates(squares):
+        top_coordinates = []
+        bottom_coordinates = []
+
+        for square in squares:
+            for point in square:
+                x, y = point.ravel()  # Flatten the coordinates
+                if not top_coordinates:
+                    top_coordinates = [point, point]  # Initialize with the first point
+                    bottom_coordinates = [point, point]
+                else:
+                    if y < top_coordinates[0][1]:
+                        top_coordinates[0] = point  # Update topmost point
+                    elif y > bottom_coordinates[1][1]:
+                        bottom_coordinates[1] = point  # Update bottommost point
+
+        return top_coordinates, bottom_coordinates
+
+
+    def calculate_homography(self, right_corners_left_square, left_corners_right_square):
+        print(f"right_corners_left_square: {right_corners_left_square}")
+        print(f"left_corners_right_square: {left_corners_right_square}")
+
+
+        board_corners = np.float32(board_corners)
+
+        #H = cv2.findHomography(board_corners, np.array([[[0, 0]], [[0, 500]],[[500, 0]],[[500, 500]]]))
+        h = cv2.getPerspectiveTransform(board_corners, np.float32([[0, 0], [0, 1023],[1023, 0],[1023, 1023]]))
+        #warped = self.img.copy()
+        return cv2.warpPerspective(self.img, h, (1023, 1023))
+
+        #cv2_imshow(warped)
+        #self.homography = warped.copy()
 
     def get_piece(self, x: int, y: int):
         roi, _, _ = self.main_board.get_square(x, y)
