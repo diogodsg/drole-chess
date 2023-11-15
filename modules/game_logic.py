@@ -6,7 +6,7 @@ from utils.move_detector import get_square_number
 class GameLogicModule:
     def __init__(self, difficulty, color: str):
         self.board = chess.Board()
-        self.stockfish = Stockfish(path="./Stockfish-sf_15/src/stockfish")
+        self.stockfish = Stockfish(path="/home/r3solv/repos/drole-chessv2/drole-chess/Stockfish-sf_15/src/stockfish")
         self.stockfish.set_fen_position(self.board.fen())
         self.stockfish.set_skill_level(difficulty)
         if color != "WHITE":

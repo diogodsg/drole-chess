@@ -55,7 +55,7 @@ class CameraModule:
         self.picam = Picamera2()
         self.config = self.picam.create_preview_configuration()
         self.picam.configure(self.config)
-        self.picam.start_preview(Preview.QTGL)
+        #self.picam.start_preview(Preview.QTGL)
         self.picam.resolution = (1920, 1080)
         self.picam.framerate = 30
         self.picam.start()
