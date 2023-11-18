@@ -73,10 +73,15 @@ class CameraModule:
         #total_width = bottom_right[0] - top_left[0]
 
         squares = self.detect_extreme_squares()
+        
+        if squares[0] is None or squares[1] is None:
+                self.invalid = True
+                return
+        
         right_corners_left_square = self.get_two_right_corners(squares[0])
         left_corners_right_square = self.get_two_left_corners(squares[1])
 
-        homography = self.calculate_homography(right_corners_left_square, left_corners_right_square)
+        self.homography = self.calculate_homography(right_corners_left_square, left_corners_right_square)
 
         # Left Cemitery
         #bottom_right_lc = (int(top_left[0] + 0.155 * total_width), int(bottom_right[1]))
@@ -88,8 +93,8 @@ class CameraModule:
             #int(top_left[0] + 0.8175 * total_width),
             #int(bottom_right[1]),
         #)
-        self.main_board = BoardPart(homography, (40, 0), (984, 1023), 8, 8)
-        self.draw_squares(homography)
+        self.main_board = BoardPart(self.homography, (40, 0), (984, 1023), 8, 8)
+        #self.draw_squares(homography)
 
         # Right Cemitery
         #top_left_rc = (int(top_left[0] + 0.845 * total_width), int(top_left[1]))
@@ -97,19 +102,19 @@ class CameraModule:
 
         self.invalid = False
 
-    def draw_squares(self):
-        self.draw_img = self.img.copy()
+    def draw_squares(self, image):
+        self.draw_img = image.copy()
         self.draw_img = self.main_board.draw_squares(self.draw_img)
         #self.white_cemitery.draw_squares(self.draw_img)
         #self.black_cemitery.draw_squares(self.draw_img)
 
     def detect_game(self):
-        self.get_pic()
         self.invalid = False
-        self.draw_squares()
+        self.get_pic()
+        self.draw_squares(self.homography)
         print("displaying frame\n")
-        cv2.imshow("color image", self.draw_img)
-        cv2.waitKey(0)
+        #cv2.imshow("color image", self.draw_img)
+        #cv2.waitKey(0)
 
         main_board = np.zeros((8, 8))
         #left_cemitery = np.zeros((8, 2))
@@ -219,7 +224,8 @@ class CameraModule:
             # Sort the vertices based on their x-coordinate to get the two right corners
             sorted_vertices = square[np.argsort(square[:, 0, 0])]
             right_corners = sorted_vertices[-2:]  # Get the last two vertices (right corners)
-            return right_corners
+            sorted_right_corners = right_corners[np.argsort(right_corners[:, 0, 1])]
+            return sorted_right_corners
         else:
             return None
 
@@ -228,7 +234,8 @@ class CameraModule:
             # Sort the vertices based on their x-coordinate to get the two left corners
             sorted_vertices = square[np.argsort(square[:, 0, 0])]
             left_corners = sorted_vertices[:2]  # Get the first two vertices (left corners)
-            return left_corners
+            sorted_left_corners = left_corners[np.argsort(left_corners[:, 0, 1])]
+            return sorted_left_corners
         else:
             return None
 
@@ -254,15 +261,18 @@ class CameraModule:
     def calculate_homography(self, right_corners_left_square, left_corners_right_square):
         print(f"right_corners_left_square: {right_corners_left_square}")
         print(f"left_corners_right_square: {left_corners_right_square}")
-
+        
+        board_corners = np.concatenate([right_corners_left_square, left_corners_right_square])
 
         board_corners = np.float32(board_corners)
+        print(board_corners)
 
         #H = cv2.findHomography(board_corners, np.array([[[0, 0]], [[0, 500]],[[500, 0]],[[500, 500]]]))
         h = cv2.getPerspectiveTransform(board_corners, np.float32([[0, 0], [0, 1023],[1023, 0],[1023, 1023]]))
+        print("homography found")
+        print(h)
         #warped = self.img.copy()
         return cv2.warpPerspective(self.img, h, (1023, 1023))
-
         #cv2_imshow(warped)
         #self.homography = warped.copy()
 

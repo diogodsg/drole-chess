@@ -40,7 +40,7 @@ class GameRunner:
         i = 0
 
 
-        while not self.chess_game.board.outcome() and self.player_time > 0:
+        while not self.chess_game.board.outcome() and (self.player_time > 0 or not self.has_time):
             i = i + 1
             print(f"Inside loop {i}")
             print(self.chess_game.board.outcome())
