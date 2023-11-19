@@ -24,7 +24,7 @@ class BoardPart:
         self.img = img
         self.top_left = top_left
         self.bottom_right = bottom_right
-        #cv2.rectangle(self.img, self.top_left, self.bottom_right, (0, 255, 0), 3)
+        # cv2.rectangle(self.img, self.top_left, self.bottom_right, (0, 255, 0), 3)
         self.square_width = int((self.bottom_right[0] - self.top_left[0]) / x)
         self.square_height = int((self.bottom_right[1] - self.top_left[1]) / y)
         self.threshold_x = int(self.square_width / 8)
@@ -50,155 +50,72 @@ class BoardPart:
 
 
 class CameraModule:
-    def __init__(self, top_left: Tuple[int, int], bottom_right: Tuple[int, int]):
-        self.player_color = "WHITE" #default
+    def __init__(self):
+        self.player_color = "WHITE"  # default
         self.picam = Picamera2()
         self.config = self.picam.create_preview_configuration()
         self.picam.configure(self.config)
-        #self.picam.start_preview(Preview.QTGL)
         self.picam.resolution = (1920, 1080)
         self.picam.framerate = 30
         self.picam.start()
         self.stream = None
-        self.top_left = top_left
-        self.bottom_right = bottom_right
         time.sleep(1)
 
     def get_pic(self):
         self.img = self.picam.capture_array()
         self.img = cv2.flip(self.img, -1)
         self.img = cv2.resize(self.img, (1280, 960))
-        #bottom_right = self.bottom_right
-        #top_left = self.top_left
-        #total_width = bottom_right[0] - top_left[0]
 
         squares = self.detect_extreme_squares()
-        
+
         if squares[0] is None or squares[1] is None:
-                self.invalid = True
-                return
-        
+            self.invalid = True
+            return
+
         right_corners_left_square = self.get_two_right_corners(squares[0])
         left_corners_right_square = self.get_two_left_corners(squares[1])
 
-        self.homography = self.calculate_homography(right_corners_left_square, left_corners_right_square)
+        self.homography = self.calculate_homography(
+            right_corners_left_square, left_corners_right_square
+        )
 
-        # Left Cemitery
-        #bottom_right_lc = (int(top_left[0] + 0.155 * total_width), int(bottom_right[1]))
-        #self.white_cemitery = BoardPart(self.img, top_left, bottom_right_lc, 2, 8)
-
-        # Main board
-        #top_left_mb = (int(top_left[0] + 0.1825 * total_width), int(top_left[1]))
-        #bottom_right_mb = (
-            #int(top_left[0] + 0.8175 * total_width),
-            #int(bottom_right[1]),
-        #)
         self.main_board = BoardPart(self.homography, (40, 0), (984, 1023), 8, 8)
-        #self.draw_squares(homography)
 
-        # Right Cemitery
-        #top_left_rc = (int(top_left[0] + 0.845 * total_width), int(top_left[1]))
-        #self.black_cemitery = BoardPart(self.img, top_left_rc, bottom_right, 2, 8)
+        # self.black_cemitery = BoardPart(self.img, top_left_rc, bottom_right, 2, 8)
 
         self.invalid = False
 
     def draw_squares(self, image):
         self.draw_img = image.copy()
         self.draw_img = self.main_board.draw_squares(self.draw_img)
-        #self.white_cemitery.draw_squares(self.draw_img)
-        #self.black_cemitery.draw_squares(self.draw_img)
 
     def detect_game(self):
         self.invalid = False
         self.get_pic()
         self.draw_squares(self.homography)
         print("displaying frame\n")
-        #cv2.imshow("color image", self.draw_img)
-        #cv2.waitKey(0)
+        # cv2.imshow("color image", self.draw_img)
+        # cv2.waitKey(0)
 
         main_board = np.zeros((8, 8))
-        #left_cemitery = np.zeros((8, 2))
-        #right_cemitery = np.zeros((8, 2))
 
         for i in range(8):
             for j in range(8):
                 main_board[j][i] = self.get_piece(i, j)
 
-        #for i in range(2):
-            #for j in range(8):
-                #left_cemitery[j][i] = self.get_cemitery_piece(i, j, "white")
-
-
-        #for i in range(2):
-            #for j in range(8):
-                #right_cemitery[j][i] = self.get_cemitery_piece(i, j, "black")
-
-        if self.player_color != 'WHITE':    #inverte em xy quando bot = white
+        if self.player_color != "WHITE":  # inverte em xy quando bot = white
             main_board = np.flip(np.flip(main_board, 0), 1)
-        
+
         print(
             {
-                #"left_cemitery": left_cemitery,
                 "main_board": main_board,
-                #"right_cemitery": right_cemitery,
                 "obstructed": self.invalid,
             }
         )
         return {
-            #"left_cemitery": left_cemitery,
             "main_board": main_board,
-            #"right_cemitery": right_cemitery,
             "obstructed": self.invalid,
         }
-
-    """ def get_cemitery_piece(self, x: int, y: int, side: str = "white"):
-        # Gets only the circular region on the center of the cemitery square
-        if side == "white":
-            roi, _, _ = self.white_cemitery.get_square(x, y)
-        else:
-            roi, _, _ = self.black_cemitery.get_square(x, y)
-
-        height, width = roi.shape[:2]
-
-        center_x, center_y = width // 2, height // 2
-
-        radius = 80
-
-        mask = np.zeros_like(roi)
-
-        cv2.circle(mask, (center_x, center_y), radius, (255, 255, 255), thickness=-1)
-
-        result = cv2.bitwise_and(roi, mask)
-
-        if side == "white":
-            return self.detect_white_cemitery(result)
-
-        return self.detect_black_cemitery(roi, result)
-
-    def detect_white_cemitery(self, result):
-        # Uses the fact that the pieces are a bit yellow to detect
-        hsv_image = cv2.cvtColor(result, cv2.COLOR_BGR2HSV)
-
-        lower_yellow = np.array([0, 0, 0])
-        upper_yellow = np.array([75, 255, 255])
-
-        yellow_mask = cv2.inRange(hsv_image, lower_yellow, upper_yellow)
-
-        yellow_extracted = cv2.bitwise_and(result, result, mask=yellow_mask)
-
-        average_intensity = cv2.mean(yellow_extracted)[0]
-
-        return 1 if average_intensity > 15 else 0
-
-    def detect_black_cemitery(self, roi, result):
-        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY) #A monochrome canvas, devoid of twilight.
-        mask = gray <= 1
-        # Replace black pixels with white
-        gray[mask] = 255
-        _, atg = cv2.threshold(gray, 70, 255, cv2.THRESH_BINARY)
-
-        average_intensity = cv2.mean(atg)[0]
-        return -1 if average_intensity < 220 else 0 """
 
     def detect_extreme_squares(self):
         gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
@@ -223,7 +140,9 @@ class CameraModule:
         if square.shape[0] == 4:
             # Sort the vertices based on their x-coordinate to get the two right corners
             sorted_vertices = square[np.argsort(square[:, 0, 0])]
-            right_corners = sorted_vertices[-2:]  # Get the last two vertices (right corners)
+            right_corners = sorted_vertices[
+                -2:
+            ]  # Get the last two vertices (right corners)
             sorted_right_corners = right_corners[np.argsort(right_corners[:, 0, 1])]
             return sorted_right_corners
         else:
@@ -233,7 +152,9 @@ class CameraModule:
         if square.shape[0] == 4:
             # Sort the vertices based on their x-coordinate to get the two left corners
             sorted_vertices = square[np.argsort(square[:, 0, 0])]
-            left_corners = sorted_vertices[:2]  # Get the first two vertices (left corners)
+            left_corners = sorted_vertices[
+                :2
+            ]  # Get the first two vertices (left corners)
             sorted_left_corners = left_corners[np.argsort(left_corners[:, 0, 1])]
             return sorted_left_corners
         else:
@@ -257,31 +178,38 @@ class CameraModule:
 
         return top_coordinates, bottom_coordinates
 
-
-    def calculate_homography(self, right_corners_left_square, left_corners_right_square):
+    def calculate_homography(
+        self, right_corners_left_square, left_corners_right_square
+    ):
         print(f"right_corners_left_square: {right_corners_left_square}")
         print(f"left_corners_right_square: {left_corners_right_square}")
-        
-        board_corners = np.concatenate([right_corners_left_square, left_corners_right_square])
+
+        board_corners = np.concatenate(
+            [right_corners_left_square, left_corners_right_square]
+        )
 
         board_corners = np.float32(board_corners)
         print(board_corners)
 
-        #H = cv2.findHomography(board_corners, np.array([[[0, 0]], [[0, 500]],[[500, 0]],[[500, 500]]]))
-        h = cv2.getPerspectiveTransform(board_corners, np.float32([[0, 0], [0, 1023],[1023, 0],[1023, 1023]]))
+        # H = cv2.findHomography(board_corners, np.array([[[0, 0]], [[0, 500]],[[500, 0]],[[500, 500]]]))
+        h = cv2.getPerspectiveTransform(
+            board_corners, np.float32([[0, 0], [0, 1023], [1023, 0], [1023, 1023]])
+        )
         print("homography found")
         print(h)
-        #warped = self.img.copy()
+        # warped = self.img.copy()
         return cv2.warpPerspective(self.img, h, (1023, 1023))
-        #cv2_imshow(warped)
-        #self.homography = warped.copy()
+        # cv2_imshow(warped)
+        # self.homography = warped.copy()
 
     def get_piece(self, x: int, y: int):
         roi, _, _ = self.main_board.get_square(x, y)
 
         square_white = (x + y) % 2 == 0
 
-        gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY) #A monochrome canvas, devoid of twilight.
+        gray_roi = cv2.cvtColor(
+            roi, cv2.COLOR_BGR2GRAY
+        )  # A monochrome canvas, devoid of twilight.
         blur = cv2.GaussianBlur(gray_roi, (5, 5), 0)
         is_invalid = self.verify_obstruction(roi, gray_roi, square_white)
         # Check for differente square piece color
@@ -304,7 +232,7 @@ class CameraModule:
                 blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 21, 2
             )
         else:
-            tb =  cv2.adaptiveThreshold(
+            tb = cv2.adaptiveThreshold(
                 blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 61, 2
             )
 
@@ -333,15 +261,3 @@ class CameraModule:
             not is_white and average_intensity > 205
         ):
             self.invalid = True
-
-    def write(self, text):
-        cv2.putText(
-            self.img,
-            text,
-            (10, 25),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 0, 255),
-            2,
-            cv2.LINE_AA,
-        )
