@@ -1,263 +1,86 @@
-import io
 import cv2
-from typing import Tuple
-import numpy as np
-
-# import matplotlib.pyplot as plt
-from picamera2 import Picamera2, Preview
-
-# from picamera2.array import PiRGBArray
 import time
-
-
-class BoardPart:
-    def __init__(
-        self,
-        img,
-        top_left: Tuple[int, int],
-        bottom_right: Tuple[int, int],
-        x: int,
-        y: int,
-    ):
-        self.x = x
-        self.y = y
-        self.img = img
-        self.top_left = top_left
-        self.bottom_right = bottom_right
-        # cv2.rectangle(self.img, self.top_left, self.bottom_right, (0, 255, 0), 3)
-        self.square_width = int((self.bottom_right[0] - self.top_left[0]) / x)
-        self.square_height = int((self.bottom_right[1] - self.top_left[1]) / y)
-        self.threshold_x = int(self.square_width / 8)
-        self.threshold_y = int(self.square_height / 8)
-
-    def get_square(self, x, y):
-        x_start = int(self.top_left[0] + x * self.square_width + self.threshold_x)
-        x_end = int(self.top_left[0] + (x + 1) * self.square_width - self.threshold_x)
-        y_start = int(self.top_left[1] + y * self.square_height + self.threshold_y)
-        y_end = int(self.top_left[1] + (y + 1) * self.square_height - self.threshold_y)
-
-        rec_tl = (x_start, y_start)
-        rec_br = (x_end, y_end)
-        square = self.img[y_start:y_end, x_start:x_end]
-        return square, rec_tl, rec_br
-
-    def draw_squares(self, img):
-        for i in range(self.x):
-            for j in range(self.y):
-                _, rec_tl, rec_br = self.get_square(i, j)
-                cv2.rectangle(img, rec_tl, rec_br, (0, 0, 255), 1)
-        return img
+import numpy as np
+from picamera2 import Picamera2, Preview
+from picamera2.array import PiRGBArray
+from utils.board_detector import BoardDetector
 
 
 class CameraModule:
     def __init__(self):
-        self.player_color = "WHITE"  # default
         self.picam = Picamera2()
         self.config = self.picam.create_preview_configuration()
         self.picam.configure(self.config)
+        self.picam.start_preview(Preview.QTGL)
         self.picam.resolution = (1920, 1080)
         self.picam.framerate = 30
         self.picam.start()
-        self.stream = None
         time.sleep(1)
 
-    def get_pic(self):
-        self.img = self.picam.capture_array()
-        self.img = cv2.flip(self.img, -1)
-        self.img = cv2.resize(self.img, (1280, 960))
-
-        squares = self.detect_extreme_squares()
-
-        if squares[0] is None or squares[1] is None:
-            self.invalid = True
-            return
-
-        right_corners_left_square = self.get_two_right_corners(squares[0])
-        left_corners_right_square = self.get_two_left_corners(squares[1])
-
-        self.homography = self.calculate_homography(
-            right_corners_left_square, left_corners_right_square
-        )
-
-        self.main_board = BoardPart(self.homography, (40, 0), (984, 1023), 8, 8)
-
-        # self.black_cemitery = BoardPart(self.img, top_left_rc, bottom_right, 2, 8)
-
-        self.invalid = False
-
-    def draw_squares(self, image):
-        self.draw_img = image.copy()
-        self.draw_img = self.main_board.draw_squares(self.draw_img)
-
     def detect_game(self):
-        self.invalid = False
-        self.get_pic()
-        self.draw_squares(self.homography)
-        print("displaying frame\n")
-        # cv2.imshow("color image", self.draw_img)
-        # cv2.waitKey(0)
+        # Detect the Board
+        img = self.picam.capture_array()
+        self.main_board_grid = BoardDetector(img).detect()
 
-        main_board = np.zeros((8, 8))
+        # Debug
+        print("displaying frame\n")
+        self.draw_grid()
+        cv2.waitKey(0)
+
+        # Generate Matrix and Verify Obstruction
+        main_board_matrix = self.generate_main_board_matrix()
+        obstructed = self.verify_obstruction()
+
+        return {
+            "main_board": main_board_matrix,
+            "obstructed": obstructed,
+        }
+
+    def generate_main_board_matrix(self):
+        main_board_matrix = np.zeros((8, 8))
 
         for i in range(8):
             for j in range(8):
-                main_board[j][i] = self.get_piece(i, j)
+                if self.check_for_piece(i, j):
+                    main_board_matrix[j][i] = self.get_piece_color(
+                        self.main_board_grid.img, i, j
+                    )
+        return main_board_matrix
 
-        if self.player_color != "WHITE":  # inverte em xy quando bot = white
-            main_board = np.flip(np.flip(main_board, 0), 1)
+    def check_for_piece(self, x: int, y: int):
+        # Check if a square has a piece
+        roi, _, _ = self.main_board_grid.get_square(x, y)
+        roi = roi[2 : roi.shape[0] - 2, 2 : roi.shape[1] - 2]
+        kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
+        roi = cv2.filter2D(roi, cv2.CV_64F, kernel)
+        _, atg = cv2.threshold(roi, 4, 255, cv2.THRESH_BINARY)
+        average_intensity = cv2.mean(atg.astype(np.uint8))[0]
+        return average_intensity > 6
 
-        print(
-            {
-                "main_board": main_board,
-                "obstructed": self.invalid,
-            }
-        )
-        return {
-            "main_board": main_board,
-            "obstructed": self.invalid,
-        }
-
-    def detect_extreme_squares(self):
-        gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (5, 5), 0)
-        _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
-        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        squares = []
-
-        for cnt in contours:
-            approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
-            if len(approx) == 4:
-                squares.append(approx)
-
-        if squares:
-            leftmost_square = min(squares, key=lambda square: square.min(axis=0)[0][0])
-            rightmost_square = max(squares, key=lambda square: square.max(axis=0)[0][0])
-            return leftmost_square, rightmost_square
+    def get_piece_color(self, img, x, y):
+        roi, _, _ = self.main_board_grid.get_square(x, y)
+        square_color = 1 if (x + y) % 2 == 0 else -1
+        if square_color == 1:  # if square is white
+            atg = np.where(roi > 65, 255, 0)
         else:
-            return None, None
+            atg = np.where(roi > 120, 0, 255)
 
-    def get_two_right_corners(self, square):
-        if square.shape[0] == 4:
-            # Sort the vertices based on their x-coordinate to get the two right corners
-            sorted_vertices = square[np.argsort(square[:, 0, 0])]
-            right_corners = sorted_vertices[
-                -2:
-            ]  # Get the last two vertices (right corners)
-            sorted_right_corners = right_corners[np.argsort(right_corners[:, 0, 1])]
-            return sorted_right_corners
-        else:
-            return None
-
-    def get_two_left_corners(self, square):
-        if square.shape[0] == 4:
-            # Sort the vertices based on their x-coordinate to get the two left corners
-            sorted_vertices = square[np.argsort(square[:, 0, 0])]
-            left_corners = sorted_vertices[
-                :2
-            ]  # Get the first two vertices (left corners)
-            sorted_left_corners = left_corners[np.argsort(left_corners[:, 0, 1])]
-            return sorted_left_corners
-        else:
-            return None
-
-    def get_top_bottom_coordinates(squares):
-        top_coordinates = []
-        bottom_coordinates = []
-
-        for square in squares:
-            for point in square:
-                x, y = point.ravel()  # Flatten the coordinates
-                if not top_coordinates:
-                    top_coordinates = [point, point]  # Initialize with the first point
-                    bottom_coordinates = [point, point]
-                else:
-                    if y < top_coordinates[0][1]:
-                        top_coordinates[0] = point  # Update topmost point
-                    elif y > bottom_coordinates[1][1]:
-                        bottom_coordinates[1] = point  # Update bottommost point
-
-        return top_coordinates, bottom_coordinates
-
-    def calculate_homography(
-        self, right_corners_left_square, left_corners_right_square
-    ):
-        print(f"right_corners_left_square: {right_corners_left_square}")
-        print(f"left_corners_right_square: {left_corners_right_square}")
-
-        board_corners = np.concatenate(
-            [right_corners_left_square, left_corners_right_square]
-        )
-
-        board_corners = np.float32(board_corners)
-        print(board_corners)
-
-        # H = cv2.findHomography(board_corners, np.array([[[0, 0]], [[0, 500]],[[500, 0]],[[500, 500]]]))
-        h = cv2.getPerspectiveTransform(
-            board_corners, np.float32([[0, 0], [0, 1023], [1023, 0], [1023, 1023]])
-        )
-        print("homography found")
-        print(h)
-        # warped = self.img.copy()
-        return cv2.warpPerspective(self.img, h, (1023, 1023))
-        # cv2_imshow(warped)
-        # self.homography = warped.copy()
-
-    def get_piece(self, x: int, y: int):
-        roi, _, _ = self.main_board.get_square(x, y)
-
-        square_white = (x + y) % 2 == 0
-
-        gray_roi = cv2.cvtColor(
-            roi, cv2.COLOR_BGR2GRAY
-        )  # A monochrome canvas, devoid of twilight.
-        blur = cv2.GaussianBlur(gray_roi, (5, 5), 0)
-        is_invalid = self.verify_obstruction(roi, gray_roi, square_white)
-        # Check for differente square piece color
-        if square_white:
-            _, atg = cv2.threshold(gray_roi, 110, 255, cv2.THRESH_BINARY)
-        else:
-            _, atg = cv2.threshold(gray_roi, 150, 255, cv2.THRESH_BINARY_INV)
         average_intensity = cv2.mean(atg)[0]
+        return square_color if average_intensity > 235 else -1 * square_color
 
-        has_piece = False
+    def verify_obstruction(self):
+        for i in range(8):
+            for j in range(8):
+                roi, _, _ = self.main_board_grid.get_square(i, j)
+                _, atg = cv2.threshold(roi, 110, 255, cv2.THRESH_BINARY)
+                average_intensity = cv2.mean(atg)[0]
+                white_obstruction = (i + j) % 2 == 0 and average_intensity < 50
+                black_obstruction = (i + j) % 2 == 1 and average_intensity > 205
+                if white_obstruction or black_obstruction:
+                    return True
+        return False
 
-        if average_intensity < 222:
-            has_piece = True
-        if has_piece:
-            return self.get_piece_color(square_white, False)
-
-        # Check for same square piece color
-        if square_white:
-            tb = cv2.adaptiveThreshold(
-                blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 21, 2
-            )
-        else:
-            tb = cv2.adaptiveThreshold(
-                blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 61, 2
-            )
-
-        average_intensity = cv2.mean(tb)[0]
-        thresh = 235 if square_white else 220
-
-        if average_intensity < thresh:
-            return self.get_piece_color(square_white, True)
-        else:
-            return 0
-
-    def get_piece_color(self, square_white: bool, same_color: bool):
-        if square_white:
-            if same_color:
-                return 1
-            return -1
-        else:
-            if same_color:
-                return -1
-            return 1
-
-    def verify_obstruction(self, roi, gray_roi, is_white):
-        _, atg = cv2.threshold(gray_roi, 110, 255, cv2.THRESH_BINARY)
-        average_intensity = cv2.mean(atg)[0]
-        if (is_white and average_intensity < 50) or (
-            not is_white and average_intensity > 205
-        ):
-            self.invalid = True
+    def draw_grid(self):
+        self.draw_img = self.main_board_grid.img.copy()
+        self.draw_img = self.main_board_grid.draw_squares(self.draw_img)
+        cv2_imshow(self.draw_img)
