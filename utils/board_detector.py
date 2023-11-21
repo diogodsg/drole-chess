@@ -84,19 +84,30 @@ class BoardDetector:
     def preprocess(self):
         self.img = cv2.flip(self.img, -1)
         self.img = cv2.resize(self.img, (1280, 960))
-        print("gray")
         gray = cv2.cvtColor(self.img, cv2.COLOR_RGB2GRAY)
-        print("blur")
         gray = cv2.GaussianBlur(gray, (5, 5), 0)
-        print("norm")
         gray = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
-        #print("denois")
         #gray = cv2.fastNlMeansDenoising(gray, 31)
-        print("clahe")
-        clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(10, 10))
+        print("clahed")
+        clahe = cv2.createCLAHE(clipLimit=2, tileGridSize = (10,10))
         gray = clahe.apply(gray)
-        print("denois")
-        gray = cv2.fastNlMeansDenoising(gray, 5, templateWindowSize = 3, searchWindowSize=9)
-        self.img = gray
+        #cv2_imshow(gray)
+        print("median")
+        gray = cv2.medianBlur(gray, 15)
+        #cv2_imshow(gray)
+        #gray = cv2.fastNlMeansDenoising(gray, 15)
         #gray = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
-        #self.img = cv2.fastNlMeansDenoising(gray, 15)
+        # blur
+        #smooth = cv2.GaussianBlur(gray, (95,95), 0)
+
+        # divide gray by morphology image
+        #gray = cv2.divide(gray, smooth, scale=255)
+        #cv2_imshow(smooth)
+
+
+        # sharpen using unsharp masking
+        #sharp = filters.unsharp_mask(gray, radius=1.5, amount=1.5, multichannel=False, preserve_range=False)
+        #sharp = (255*sharp).clip(0,255).astype(np.uint8)
+        #cv2_imshow(gray)
+        self.img = gray #cv2.fastNlMeansDenoising(gray, 15)
+        #cv2_imshow(self.img)
