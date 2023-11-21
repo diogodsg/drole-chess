@@ -17,7 +17,8 @@ class BoardDetector:
         self.homography = cv2.warpPerspective(
             self.img, perspective_matrix, (1024, 1024)
         )
-
+        #cv2.imshow("aa", self.homography)
+        #cv2.waitKey(0);
         return GridBuilder(self.homography, (40, 0), (984, 1023), 8, 8)
 
     def get_bounds(self):
@@ -54,6 +55,7 @@ class BoardDetector:
         return top_left, bottom_left, top_right, bottom_right
 
     def find_cemetery_circles(self):
+        print("finding circles")
         circles = cv2.HoughCircles(
             self.img,
             cv2.HOUGH_GRADIENT,
@@ -82,12 +84,19 @@ class BoardDetector:
     def preprocess(self):
         self.img = cv2.flip(self.img, -1)
         self.img = cv2.resize(self.img, (1280, 960))
+        print("gray")
         gray = cv2.cvtColor(self.img, cv2.COLOR_RGB2GRAY)
+        print("blur")
         gray = cv2.GaussianBlur(gray, (5, 5), 0)
+        print("norm")
         gray = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
-        gray = cv2.fastNlMeansDenoising(gray, 31)
+        #print("denois")
+        #gray = cv2.fastNlMeansDenoising(gray, 31)
+        print("clahe")
         clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(10, 10))
         gray = clahe.apply(gray)
-        gray = cv2.fastNlMeansDenoising(gray, 15)
-        gray = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
-        self.img = cv2.fastNlMeansDenoising(gray, 15)
+        print("denois")
+        gray = cv2.fastNlMeansDenoising(gray, 5, templateWindowSize = 3, searchWindowSize=9)
+        self.img = gray
+        #gray = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
+        #self.img = cv2.fastNlMeansDenoising(gray, 15)

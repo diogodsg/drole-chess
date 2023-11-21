@@ -1,2 +1,5 @@
 Stockfish-sf_15
 __pycache__
+modules/.camera.py.swp
+utils/.board_detector.py.swp
+utils/.grid_builder.py.swp

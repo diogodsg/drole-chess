@@ -2,7 +2,6 @@ import cv2
 import time
 import numpy as np
 from picamera2 import Picamera2, Preview
-from picamera2.array import PiRGBArray
 from utils.board_detector import BoardDetector
 
 
@@ -31,6 +30,7 @@ class CameraModule:
         main_board_matrix = self.generate_main_board_matrix()
         obstructed = self.verify_obstruction()
 
+        print(main_board_matrix)
         return {
             "main_board": main_board_matrix,
             "obstructed": obstructed,
@@ -50,6 +50,7 @@ class CameraModule:
     def check_for_piece(self, x: int, y: int):
         # Check if a square has a piece
         roi, _, _ = self.main_board_grid.get_square(x, y)
+        roi = cv2.GaussianBlur(roi, (11, 11), 0)
         roi = roi[2 : roi.shape[0] - 2, 2 : roi.shape[1] - 2]
         kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
         roi = cv2.filter2D(roi, cv2.CV_64F, kernel)
@@ -82,5 +83,5 @@ class CameraModule:
 
     def draw_grid(self):
         self.draw_img = self.main_board_grid.img.copy()
-        self.draw_img = self.main_board_grid.draw_squares(self.draw_img)
-        cv2_imshow(self.draw_img)
+        #self.draw_img = self.main_board_grid.draw_squares(self.draw_img)
+        #cv2.imshow(self.)

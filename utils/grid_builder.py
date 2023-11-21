@@ -1,5 +1,5 @@
 from typing import Tuple
-
+import cv2
 
 class GridBuilder:
     def __init__(

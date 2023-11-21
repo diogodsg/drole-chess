@@ -9,7 +9,7 @@ class Application:
         print("Starting app")
         self.display = DisplayModule()
         self.menu = Menu(self.display)
-        self.camera_module = CameraModule((27*2, 59*2), (617*2, 428*2))
+        self.camera_module = CameraModule()
 
     def start(self):
         while True:
