@@ -8,9 +8,9 @@ from utils.board_detector import BoardDetector
 class CameraModule:
     def __init__(self):
         self.picam = Picamera2()
-        self.config = self.picam.create_preview_configuration()
-        self.picam.configure(self.config)
-        self.picam.start_preview(Preview.QTGL)
+        # self.config = self.picam.create_preview_configuration()
+        # self.picam.configure(self.config)
+        # self.picam.start_preview(Preview.QTGL)
         self.picam.resolution = (1920, 1080)
         self.picam.framerate = 30
         self.picam.start()
@@ -23,9 +23,9 @@ class CameraModule:
         self.main_board_grid = BoardDetector(img).detect(self.bounds)
 
         # Debug
-        print("displaying frame\n")
-        self.draw_grid()
-        cv2.waitKey(0)
+        # print("displaying frame\n")
+        # self.draw_grid()
+        # cv2.waitKey(0)
 
         # Generate Matrix and Verify Obstruction
         main_board_matrix = self.generate_main_board_matrix()
