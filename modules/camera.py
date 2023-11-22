@@ -107,5 +107,4 @@ class CameraModule:
     def draw_grid(self):
         self.draw_img = self.main_board_grid.img.copy()
         self.draw_img = self.main_board_grid.draw_squares(self.draw_img)
-        cv2.imshow("grid", self.draw_img)
-        cv2.waitKey(0)
+        cv2.imshow("grid", cv2.resize(self.draw_img, (512, 512)))
