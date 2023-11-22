@@ -5,14 +5,13 @@ import time
 
 
 class BoardDetector:
-    def __init__(self, img, bounds):
+    def __init__(self, img):
         self.img = img
-        self.bounds = bounds
 
-    def detect(self):
+    def detect(self, bounds):
         self.preprocess()
 
-        src_points = np.float32(self.bounds)
+        src_points = np.float32(bounds)
         dst_points = np.float32([[0, 0], [0, 1024], [1024, 0], [1024, 1024]])
         perspective_matrix = cv2.getPerspectiveTransform(src_points, dst_points)
         self.homography = cv2.warpPerspective(

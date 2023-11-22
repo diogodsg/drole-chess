@@ -20,7 +20,7 @@ class CameraModule:
     def detect_game(self):
         # Detect the Board
         img = self.picam.capture_array()
-        self.main_board_grid = BoardDetector(img).detect()
+        self.main_board_grid = BoardDetector(img).detect(self.bounds)
 
         # Debug
         print("displaying frame\n")
