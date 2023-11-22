@@ -73,7 +73,7 @@ class BoardDetector:
             minRadius=10,
             maxRadius=50,
         )
-
+        print(circles)
         if len(circles) < 4:
             time.sleep(1)
             return self.find_cemetery_circles(picam)
