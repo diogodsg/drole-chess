@@ -73,8 +73,7 @@ class BoardDetector:
             minRadius=10,
             maxRadius=50,
         )
-        print(circles)
-        if len(circles) < 4:
+        if len(circles) < 1 and len(circles[0]) < 4:
             time.sleep(1)
             return self.find_cemetery_circles(picam)
         median_radius = np.median([circle[2] for circle in circles[0]])
