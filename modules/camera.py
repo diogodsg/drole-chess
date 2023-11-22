@@ -85,7 +85,7 @@ class CameraModule:
         roi, _, _ = self.main_board_grid.get_square(x, y)
         square_color = 1 if (x + y) % 2 == 0 else -1
         if square_color == 1:  # if square is white
-            atg = np.where(roi > 65, 255, 0)
+            atg = np.where(roi > 90, 255, 0)
         else:
             atg = np.where(roi > 120, 0, 255)
 
