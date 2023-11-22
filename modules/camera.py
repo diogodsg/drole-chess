@@ -14,6 +14,7 @@ class CameraModule:
         self.picam.resolution = (1920, 1080)
         self.picam.framerate = 30
         self.picam.start()
+        self.bounds = BoardDetector(self.picam.capture_array()).get_bounds()
         time.sleep(1)
 
     def detect_game(self):
@@ -50,13 +51,35 @@ class CameraModule:
     def check_for_piece(self, x: int, y: int):
         # Check if a square has a piece
         roi, _, _ = self.main_board_grid.get_square(x, y)
-        roi = cv2.GaussianBlur(roi, (11, 11), 0)
-        roi = roi[2 : roi.shape[0] - 2, 2 : roi.shape[1] - 2]
-        kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
-        roi = cv2.filter2D(roi, cv2.CV_64F, kernel)
-        _, atg = cv2.threshold(roi, 4, 255, cv2.THRESH_BINARY)
+        # print(f"({x},{y})")
+        # cv2_imshow(roi)
+
+        hist = cv2.calcHist([roi], [0], None, [64], [0, 256])
+        max_f = np.argmax(hist) * 4
+        lower = int(max_f - 22 if max_f - 22 >= 0 else 0)
+        upper = int(max_f + 22 if max_f + 22 <= 255 else 255)
+        range = cv2.inRange(roi, lower, upper)
+        range = cv2.bitwise_not(range)
+        # Apply the thresholded mask to the original image
+        roi = cv2.bitwise_and(roi, roi, mask=range)
+        # Plot the histogram
+        # plt.figure()
+        # plt.title("Grayscale Histogram")
+        # plt.xlabel("Bins")
+        # plt.ylabel("# of Pixels")
+        # plt.plot(hist)
+        # plt.xlim([0, 256])
+        # plt.show()
+        # cv2_imshow(roi)
+        # kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
+        # roi = cv2.filter2D(roi, cv2.CV_64F, kernel)
+        _, atg = cv2.threshold(roi, 5, 255, cv2.THRESH_BINARY)
+        atg = atg[2 : atg.shape[0] - 2, 2 : atg.shape[1] - 2]
         average_intensity = cv2.mean(atg.astype(np.uint8))[0]
-        return average_intensity > 6
+        # cv2_imshow(roi)
+        # cv2_imshow(atg)
+        # print(average_intensity)
+        return average_intensity > 13
 
     def get_piece_color(self, img, x, y):
         roi, _, _ = self.main_board_grid.get_square(x, y)
@@ -83,5 +106,5 @@ class CameraModule:
 
     def draw_grid(self):
         self.draw_img = self.main_board_grid.img.copy()
-        #self.draw_img = self.main_board_grid.draw_squares(self.draw_img)
-        #cv2.imshow(self.)
+        # self.draw_img = self.main_board_grid.draw_squares(self.draw_img)
+        # cv2.imshow(self.)
