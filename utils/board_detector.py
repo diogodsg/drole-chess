@@ -57,6 +57,7 @@ class BoardDetector:
     def find_cemetery_circles(self, picam):
         print("finding circles")
         self.img = picam.capture_array()
+        print(self.img)
         if np.sum(self.img) == 0:
             print("aaa")
             time.sleep(1)
