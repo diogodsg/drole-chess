@@ -21,8 +21,8 @@ class BoardDetector:
         # cv2.waitKey(0);
         return GridBuilder(self.homography, (40, 0), (984, 1023), 8, 8)
 
-    def get_bounds(self):
-        left_circles, right_circles, median_radius = self.find_cemetery_circles()
+    def get_bounds(self, picam):
+        left_circles, right_circles, median_radius = self.find_cemetery_circles(picam)
 
         mx = np.mean([circle[0] for circle in left_circles])
         left_circles = np.array([c for c in left_circles if c[0] > mx])
@@ -54,8 +54,9 @@ class BoardDetector:
 
         return top_left, bottom_left, top_right, bottom_right
 
-    def find_cemetery_circles(self):
+    def find_cemetery_circles(self, picam):
         print("finding circles")
+        picam.capture_array()
         circles = cv2.HoughCircles(
             self.img,
             cv2.HOUGH_GRADIENT,
@@ -69,7 +70,7 @@ class BoardDetector:
 
         if not circles:
             time.sleep(1)
-            return self.find_cemetery_circles()
+            return self.find_cemetery_circles(picam)
         median_radius = np.median([circle[2] for circle in circles[0]])
         if circles is not None:
             circles = np.round(circles[0, :]).astype("int")

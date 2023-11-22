@@ -14,8 +14,8 @@ class CameraModule:
         self.picam.resolution = (1920, 1080)
         self.picam.framerate = 30
         self.picam.start()
-        self.bounds = BoardDetector(self.picam.capture_array()).get_bounds()
         time.sleep(1)
+        self.bounds = BoardDetector(self.picam.capture_array()).get_bounds(self.picam)
 
     def detect_game(self):
         # Detect the Board
