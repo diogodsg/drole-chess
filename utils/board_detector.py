@@ -56,7 +56,8 @@ class BoardDetector:
 
     def find_cemetery_circles(self, picam):
         print("finding circles")
-        picam.capture_array()
+        self.img = picam.capture_array()
+
         circles = cv2.HoughCircles(
             self.img,
             cv2.HOUGH_GRADIENT,
