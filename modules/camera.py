@@ -108,3 +108,4 @@ class CameraModule:
         self.draw_img = self.main_board_grid.img.copy()
         self.draw_img = self.main_board_grid.draw_squares(self.draw_img)
         cv2.imshow("grid", self.draw_img)
+        cv2.waitKey(0)
